@@ -1,0 +1,11 @@
+syntax: glob
+README.pdf
+README.html
+slab-refinado.msh
+2dpwr.geo
+2dpwr.msh
+2dpwr-*.vtk
+2dpwr-*.pos
+2dpwr-*.txt
+*.dat
+matrix-*

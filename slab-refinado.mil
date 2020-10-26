@@ -1,0 +1,10 @@
+MESH FILE_PATH slab-refinado.msh
+MILONGA_PROBLEM GROUPS 1 DIMENSIONS 1
+MATERIAL fuel D 1    nuSigmaF 0.12 SigmaA 0.1
+
+PHYSICAL_ENTITY NAME left  BC null
+PHYSICAL_ENTITY NAME right BC null
+
+MILONGA_STEP
+PRINT "\# keff = " %.8f keff %.2f phi1(50)
+PRINT_FUNCTION phi1

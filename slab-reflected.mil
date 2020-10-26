@@ -1,0 +1,46 @@
+DEFAULT_ARGUMENT_VALUE 1 diffusion
+DEFAULT_ARGUMENT_VALUE 2 volumes
+
+# resolvemos un slab reflejado (problema 66 de la referencia @\cite{losalamos}@)
+a = 2.719087       # semi-espesor del combustible
+b = 7.510225       # ancho del reflector
+
+# rellenamos un template con la geometría del problema con los
+# valores de @$a$@ y @$b$@ de la referencia y la long. característica 0.5 cm
+# M4 INPUT_FILE_PATH slab-reflected.m4.geo OUTPUT_FILE_PATH slab-reflected.geo \
+#  MACRO a a     MACRO b b     MACRO lc  1/2  
+# SHELL "gmsh -v 0 -1 reflected-slab.geo"   # llamamos a gmsh
+MESH FILE_PATH slab-reflected.msh         # leemos la malla resultante
+
+MILONGA_PROBLEM DIMENSIONS 1 GROUPS 2 FORMULATION $1 SCHEME $2
+
+# XS de la tabla 46 (pág. 32 de @\cite{losalamos}@)
+MATERIAL reactor(d)  SigmaT_1    0.650917       SigmaT_2    2.13800       \
+                     SigmaS_1.1  0.             SigmaS_1.2 0.0342008     \
+                     SigmaS_2.1  0              SigmaS_2.2 2.06880       \
+                     nuSigmaF_1  1.004*0.61475  nuSigmaF_2  2.5*0.045704
+ 
+# XS de la tabla 46 (pág. 32 @\cite{losalamos}@)
+MATERIAL H2O(c)      SigmaT_1    1.331518007    SigmaT_2    4.37350       \
+                     SigmaS_1.1  1.226381244    SigmaS_1.2  0.1046395340  \
+                     SigmaS_2.1  0              SigmaS_2.2  4.35470
+
+# vinculamos entidades físicas volumétricas a materiales (hasta ahora las
+# entidades físicas de Gmsh se llamaban igual que los materiales de milonga)
+PHYSICAL_ENTITY NAME fuel MATERIAL reactor(d)
+PHYSICAL_ENTITY NAME refl MATERIAL H2O(c)
+
+# ponemos las condiciones de contorno
+PHYSICAL_ENTITY NAME internal  BC mirror
+PHYSICAL_ENTITY NAME external  BC vacuum
+
+MILONGA_STEP   # resolvemos
+
+# mostramos resultados
+PRINT "$1 $2" TEXT "keff = "%.8f keff TEXT "incognitas = " %g unknowns 
+PRINT_FUNCTION FILE_PATH flux-$1-$2.dat   phi1 phi2
+PRINT_FUNCTION FILE_PATH interp-$1-$2.dat phi1 phi2 MIN 0 MAX a+b NSTEPS 2000
+
+# le pedimos a milonga que grabe las matrices en formato PETSc
+# para despues dibujarlas e insertarlas en las figuras @\ref{fig:flux-volumes} y \ref{fig:flux-elements}@
+MILONGA_DEBUG  FILE_PATH matrix-$1-$2 MATRICES_SNG_STRUCT MATRICES_STRIDE 1
